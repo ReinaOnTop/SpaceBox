@@ -3,31 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat List (Debug)</title>
+  <title>SpaceBox - Chat List</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>SpaceBox Chats</h1>
 
-  <!-- Debug Display -->
-  <div id="debugOutput" style="background:#222;color:#0f0;padding:5px;font-family:monospace;"></div>
-
-  <!-- Add Friend UI -->
   <div class="add-friend">
     <input type="email" id="friendEmail" placeholder="Friend's Email">
     <button id="addFriendBtn">Add Friend</button>
   </div>
 
-  <!-- Chat List -->
   <div id="chatList" class="chat-list"></div>
 
-  <!-- Logout -->
   <button id="logoutBtn">Logout</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA5zYWZVtU9YnbHkjO_GqiPHcu6uR1biV0",
@@ -43,7 +37,6 @@
     const db = getFirestore(app);
 
     const chatList = document.getElementById("chatList");
-    const debugOutput = document.getElementById("debugOutput");
     const addFriendBtn = document.getElementById("addFriendBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
@@ -58,42 +51,60 @@
       }
     });
 
+    async function getNextChatId() {
+      const q = query(collection(db, "friends"));
+      const snapshot = await getDocs(q);
+      let maxId = 0;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.chatId) {
+          const num = parseInt(data.chatId);
+          if (num > maxId) maxId = num;
+        }
+      });
+      return (maxId + 1).toString();
+    }
+
     addFriendBtn.addEventListener("click", async () => {
       const friendEmail = document.getElementById("friendEmail").value.trim();
       if (!friendEmail) return alert("Enter a friend's email");
       if (friendEmail === currentUser.email) return alert("You can't add yourself");
 
-      const q = query(
-        collection(db, "friends"),
+      // Check if chat already exists
+      const q = query(collection(db, "friends"),
         where("owner", "==", currentUser.email),
         where("friend", "==", friendEmail)
       );
       const exists = await getDocs(q);
       if (!exists.empty) return alert("Friend already added");
 
+      // Create new chatId
+      const newChatId = await getNextChatId();
+
+      // Save for current user
       await addDoc(collection(db, "friends"), {
         owner: currentUser.email,
-        friend: friendEmail
+        friend: friendEmail,
+        chatId: newChatId
+      });
+
+      // Save for friend
+      await addDoc(collection(db, "friends"), {
+        owner: friendEmail,
+        friend: currentUser.email,
+        chatId: newChatId
       });
 
       document.getElementById("friendEmail").value = "";
-      alert("Friend added!");
+      alert(`Friend added with Chat ID: ${newChatId}`);
     });
 
     function loadFriends() {
-      const q = query(
-        collection(db, "friends"),
-        where("owner", "==", currentUser.email)
-      );
-
+      const q = query(collection(db, "friends"), where("owner", "==", currentUser.email));
       onSnapshot(q, snapshot => {
         chatList.innerHTML = "";
         snapshot.forEach(doc => {
           const data = doc.data();
-          const chatId = [currentUser.email, data.friend].sort().join("_");
-
-          debugOutput.innerHTML += `Generated ChatId for ${data.friend}: ${chatId}<br>`;
-
           const chatItem = document.createElement("div");
           chatItem.classList.add("chat-item");
           chatItem.innerHTML = `
@@ -104,9 +115,8 @@
             </div>
           `;
           chatItem.addEventListener("click", () => {
-            window.location.href = `chatroom.html?chatId=${encodeURIComponent(chatId)}&friend=${encodeURIComponent(data.friend)}`;
+            window.location.href = `chatroom.html?chatId=${data.chatId}&friend=${encodeURIComponent(data.friend)}`;
           });
-
           chatList.appendChild(chatItem);
         });
       });
