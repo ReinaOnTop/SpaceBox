@@ -3,23 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat List</title>
+  <title>SpaceBox Chats</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>SpaceBox Chats</h1>
 
-  <div id="chatList"></div>
+  <div id="chatList" class="chat-list"></div>
   <button id="logoutBtn">Logout</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-      getAuth, onAuthStateChanged, signOut 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { 
-      getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } 
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA5zYWZVtU9YnbHkjO_GqiPHcu6uR1biV0",
@@ -37,82 +34,43 @@
     const chatList = document.getElementById("chatList");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    let currentUser = null;
-
-    onAuthStateChanged(auth, async user => {
+    // Check if user is logged in
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "index.html";
-      } else {
-        currentUser = user;
-        await loadFriendChats();
+        return;
       }
+      await loadChats();
     });
 
-    async function loadFriendChats() {
-      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-      if (!userDoc.exists()) return;
-
-      const friends = userDoc.data().friends || [];
-
+    async function loadChats() {
       chatList.innerHTML = "";
+      const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(10));
+      const querySnapshot = await getDocs(q);
 
-      for (let friendUid of friends) {
-        const friendDoc = await getDoc(doc(db, "users", friendUid));
-        if (!friendDoc.exists()) continue;
+      querySnapshot.forEach(doc => {
+        const msg = doc.data();
 
-        const friendData = friendDoc.data();
-
-        // Get last message from messages collection
-        const chatId = [currentUser.uid, friendUid].sort().join("_");
-        const msgQuery = query(
-          collection(db, "messages", chatId, "chat"),
-          orderBy("timestamp", "desc"),
-          limit(1)
-        );
-        const msgSnap = await getDocs(msgQuery);
-        let lastMsg = "";
-        let lastTime = "";
-        msgSnap.forEach(doc => {
-          const m = doc.data();
-          lastMsg = m.text || "";
-          lastTime = m.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || "";
-        });
-
-        // Build chat list item
         const chatItem = document.createElement("div");
         chatItem.classList.add("chat-item");
 
-        const avatar = document.createElement("img");
-        avatar.classList.add("chat-avatar");
-        avatar.src = friendData.photoURL || "avatar.png";
-
-        const chatInfo = document.createElement("div");
-        chatInfo.classList.add("chat-info");
-
-        const chatName = document.createElement("div");
-        chatName.classList.add("chat-name");
-        chatName.textContent = friendData.displayName || friendData.email;
-
-        const chatLast = document.createElement("div");
-        chatLast.classList.add("chat-last");
-        chatLast.textContent = lastMsg;
-
-        const chatTime = document.createElement("div");
-        chatTime.classList.add("chat-time");
-        chatTime.textContent = lastTime;
-
-        chatInfo.appendChild(chatName);
-        chatInfo.appendChild(chatLast);
-        chatItem.appendChild(avatar);
-        chatItem.appendChild(chatInfo);
-        chatItem.appendChild(chatTime);
+        chatItem.innerHTML = `
+          <img src="avatar.png" class="chat-avatar">
+          <div class="chat-info">
+            <div class="chat-name">${msg.user}</div>
+            <div class="chat-last">${msg.text}</div>
+          </div>
+          <div class="chat-time">
+            ${msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || ""}
+          </div>
+        `;
 
         chatItem.addEventListener("click", () => {
-          window.location.href = `chatroom.html?chatId=${chatId}&friend=${encodeURIComponent(friendData.displayName || friendData.email)}`;
+          window.location.href = `chatroom.html?user=${encodeURIComponent(msg.user)}`;
         });
 
         chatList.appendChild(chatItem);
-      }
+      });
     }
 
     logoutBtn.addEventListener("click", () => {
