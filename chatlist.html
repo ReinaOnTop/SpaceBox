@@ -54,7 +54,6 @@
       }
     });
 
-    // Add Friend
     addFriendBtn.addEventListener("click", async () => {
       const friendEmail = document.getElementById("friendEmail").value.trim();
       if (!friendEmail) return alert("Enter a friend's email");
@@ -73,16 +72,10 @@
         friend: friendEmail
       });
 
-      await addDoc(collection(db, "friends"), {
-        owner: friendEmail,
-        friend: currentUser.email
-      });
-
       document.getElementById("friendEmail").value = "";
       alert("Friend added!");
     });
 
-    // Load Friends
     function loadFriends() {
       const q = query(
         collection(db, "friends"),
@@ -91,13 +84,12 @@
 
       onSnapshot(q, snapshot => {
         chatList.innerHTML = "";
-        snapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          const chatItem = document.createElement("div");
-          chatItem.classList.add("chat-item");
-
+        snapshot.forEach(doc => {
+          const data = doc.data();
           const chatId = [currentUser.email, data.friend].sort().join("_");
 
+          const chatItem = document.createElement("div");
+          chatItem.classList.add("chat-item");
           chatItem.innerHTML = `
             <img src="avatar.png" class="chat-avatar">
             <div class="chat-info">
