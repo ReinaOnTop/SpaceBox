@@ -61,15 +61,9 @@
         orderBy("timestamp")
       );
       onSnapshot(q, snapshot => {
-        chatBox.innerHTML = "";
-        snapshot.forEach(docSnap => {
-          const msg = docSnap.data();
-          const div = document.createElement("div");
-          div.textContent = `${msg.user}: ${msg.text}`;
-          chatBox.appendChild(div);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
+  // TEMPORARY TEST
+  chatBox.innerHTML = "<p style='color:white'>Test message</p>";
+});
     }
 
     sendBtn.addEventListener("click", async () => {
