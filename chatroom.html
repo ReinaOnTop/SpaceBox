@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat Room</title>
+  <title>SpaceBox - Chat Room (Debug)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1 id="chatTitle">Chat</h1>
+  <h1 id="chatTitle">Debug Chat</h1>
   <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
   
   <input type="text" id="messageInput" placeholder="Type a message">
@@ -17,7 +17,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } 
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } 
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -42,7 +42,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const chatId = urlParams.get("chatId");
     const friend = urlParams.get("friend");
-    document.getElementById("chatTitle").textContent = `Chat with ${friend}`;
+    document.getElementById("chatTitle").textContent = `Debug - Chat with ${friend}`;
 
     let currentUser = null;
 
@@ -56,9 +56,9 @@
     });
 
     function loadMessages() {
+      // DEBUG: load ALL messages without chatId filter
       const q = query(
         collection(db, "messages"),
-        where("chatId", "==", chatId),
         orderBy("timestamp", "asc")
       );
 
@@ -67,35 +67,9 @@
         snapshot.forEach(doc => {
           const msg = doc.data();
 
-          const chatItem = document.createElement("div");
-          chatItem.classList.add("chat-item");
-
-          const avatar = document.createElement("img");
-          avatar.classList.add("chat-avatar");
-          avatar.src = "avatar.png";
-
-          const chatInfo = document.createElement("div");
-          chatInfo.classList.add("chat-info");
-
-          const chatName = document.createElement("div");
-          chatName.classList.add("chat-name");
-          chatName.textContent = msg.user;
-
-          const chatLast = document.createElement("div");
-          chatLast.classList.add("chat-last");
-          chatLast.textContent = msg.text;
-
-          const chatTime = document.createElement("div");
-          chatTime.classList.add("chat-time");
-          chatTime.textContent = msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || "";
-
-          chatInfo.appendChild(chatName);
-          chatInfo.appendChild(chatLast);
-          chatItem.appendChild(avatar);
-          chatItem.appendChild(chatInfo);
-          chatItem.appendChild(chatTime);
-
-          chatBox.appendChild(chatItem);
+          const msgDiv = document.createElement("div");
+          msgDiv.textContent = `${msg.user}: ${msg.text}`;
+          chatBox.appendChild(msgDiv);
         });
 
         chatBox.scrollTop = chatBox.scrollHeight;
