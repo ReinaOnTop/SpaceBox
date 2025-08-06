@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat Room (Debug)</title>
+  <title>SpaceBox - Chat Room</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button id="backBtn">⬅ Back</button>
+  <button id="backBtn">Back</button>
   <h1 id="chatTitle">Chat</h1>
-
-  <!-- Debug Display -->
-  <div id="debugOutput" style="background:#222;color:#0f0;padding:5px;font-family:monospace;"></div>
 
   <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
   
@@ -42,10 +39,9 @@
     const sendBtn = document.getElementById("sendBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const backBtn = document.getElementById("backBtn");
-    const debugOutput = document.getElementById("debugOutput");
 
     const urlParams = new URLSearchParams(window.location.search);
-    const chatIdFromURL = urlParams.get("chatId");
+    const chatId = urlParams.get("chatId");
     const friend = urlParams.get("friend");
 
     document.getElementById("chatTitle").textContent = `Chat with ${friend}`;
@@ -57,23 +53,14 @@
         window.location.href = "index.html";
       } else {
         currentUser = user;
-        const fixedChatId = [currentUser.email, friend].sort().join("_");
-
-        debugOutput.innerHTML = `
-          ChatId from URL: ${chatIdFromURL}<br>
-          ChatId after sort(): ${fixedChatId}<br>
-          Logged in as: ${currentUser.email}<br>
-          Friend: ${friend}
-        `;
-
-        loadMessages(fixedChatId);
+        loadMessages();
       }
     });
 
-    function loadMessages(fixedChatId) {
+    function loadMessages() {
       const q = query(
         collection(db, "messages"),
-        where("chatId", "==", fixedChatId),
+        where("chatId", "==", chatId),
         orderBy("timestamp", "asc")
       );
 
@@ -92,10 +79,8 @@
     sendBtn.addEventListener("click", async () => {
       if (messageInput.value.trim() === "") return;
 
-      const fixedChatId = [currentUser.email, friend].sort().join("_");
-
       await addDoc(collection(db, "messages"), {
-        chatId: fixedChatId,
+        chatId: chatId,
         user: currentUser.email,
         text: messageInput.value,
         timestamp: serverTimestamp()
