@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SpaceBox - Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>SpaceBox</h1>
+
+  <div class="auth-container">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <div class="btn-group">
+      <button id="loginBtn">Login</button>
+      <button id="registerBtn">Register</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } 
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA5zYWZVtU9YnbHkjO_GqiPHcu6uR1biV0",
+      authDomain: "spacebox-d9242.firebaseapp.com",
+      projectId: "spacebox-d9242",
+      storageBucket: "spacebox-d9242.firebasestorage.app",
+      messagingSenderId: "992668472838",
+      appId: "1:992668472838:web:d61b8d7393a0123d81d587"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          window.location.href = "chat.html";
+        })
+        .catch(err => alert(err.message));
+    });
+
+    document.getElementById("registerBtn").addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => alert("Account created! Now log in."))
+        .catch(err => alert(err.message));
+    });
+  </script>
+</body>
+</html>

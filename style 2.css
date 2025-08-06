@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+  background-color: #0d0d0d;
+  color: #00ff66;
+  font-family: 'Press Start 2P', monospace;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  text-align: center;
+  padding: 15px;
+  background-color: #111;
+  border-bottom: 2px solid #00ff66;
+  font-size: 14px;
+}
+
+#chatBox {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #00ff66;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-item:hover {
+  background-color: rgba(0, 255, 102, 0.1);
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #00ff66;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+}
+
+.chat-info {
+  flex: 1;
+}
+
+.chat-name {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.chat-last {
+  font-size: 8px;
+  opacity: 0.8;
+}
+
+.chat-time {
+  font-size: 8px;
+  color: #00ff66;
+}
