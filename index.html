@@ -40,7 +40,7 @@
       const password = document.getElementById("password").value;
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
-          window.location.href = "chat.html";
+          window.location.href = "chatlist.html";
         })
         .catch(err => alert(err.message));
     });
