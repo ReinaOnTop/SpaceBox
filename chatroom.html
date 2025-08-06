@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <button id="backBtn">⬅ Back</button>
   <h1 id="chatTitle">Chat</h1>
   <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
   
@@ -37,6 +38,7 @@
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const backBtn = document.getElementById("backBtn");
 
     // Get chatId & friend from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -66,36 +68,9 @@
         chatBox.innerHTML = "";
         snapshot.forEach(doc => {
           const msg = doc.data();
-
-          const chatItem = document.createElement("div");
-          chatItem.classList.add("chat-item");
-
-          const avatar = document.createElement("img");
-          avatar.classList.add("chat-avatar");
-          avatar.src = "avatar.png";
-
-          const chatInfo = document.createElement("div");
-          chatInfo.classList.add("chat-info");
-
-          const chatName = document.createElement("div");
-          chatName.classList.add("chat-name");
-          chatName.textContent = msg.user;
-
-          const chatLast = document.createElement("div");
-          chatLast.classList.add("chat-last");
-          chatLast.textContent = msg.text;
-
-          const chatTime = document.createElement("div");
-          chatTime.classList.add("chat-time");
-          chatTime.textContent = msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || "";
-
-          chatInfo.appendChild(chatName);
-          chatInfo.appendChild(chatLast);
-          chatItem.appendChild(avatar);
-          chatItem.appendChild(chatInfo);
-          chatItem.appendChild(chatTime);
-
-          chatBox.appendChild(chatItem);
+          const msgDiv = document.createElement("div");
+          msgDiv.textContent = `${msg.user}: ${msg.text}`;
+          chatBox.appendChild(msgDiv);
         });
 
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -115,6 +90,10 @@
 
     logoutBtn.addEventListener("click", () => {
       signOut(auth);
+    });
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "chatlist.html";
     });
   </script>
 </body>
