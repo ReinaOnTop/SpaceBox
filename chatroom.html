@@ -18,7 +18,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA5zYWZVtU9YnbHkjO_GqiPHcu6uR1biV0",
@@ -34,6 +34,7 @@
     const db = getFirestore(app);
 
     const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get("chatId");
     const friendEmail = urlParams.get("friend");
     document.getElementById("friendName").textContent = friendEmail || "Chat Room";
 
@@ -54,7 +55,11 @@
     });
 
     function loadMessages() {
-      const q = query(collection(db, "messages"), orderBy("timestamp"));
+      const q = query(
+        collection(db, "messages"),
+        where("chatId", "==", chatId),
+        orderBy("timestamp")
+      );
       onSnapshot(q, snapshot => {
         chatBox.innerHTML = "";
         snapshot.forEach(docSnap => {
@@ -70,6 +75,7 @@
     sendBtn.addEventListener("click", async () => {
       if (!messageInput.value.trim()) return;
       await addDoc(collection(db, "messages"), {
+        chatId: chatId, // Now chatId is saved
         user: currentUser.email,
         text: messageInput.value,
         timestamp: serverTimestamp()
