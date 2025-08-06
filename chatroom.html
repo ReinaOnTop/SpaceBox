@@ -8,19 +8,17 @@
 </head>
 <body>
   <h1 id="chatTitle">Chat</h1>
-
-  <div id="chatBox" style="height:300px; overflow-y:auto; border:1px solid #ccc; padding:10px;"></div>
-
+  <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
+  
   <input type="text" id="messageInput" placeholder="Type a message">
   <button id="sendBtn">Send</button>
-  <button id="backBtn">Back</button>
+  <button id="logoutBtn">Logout</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { 
-      getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } 
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA5zYWZVtU9YnbHkjO_GqiPHcu6uR1biV0",
@@ -38,19 +36,16 @@
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
-    const backBtn = document.getElementById("backBtn");
-    const chatTitle = document.getElementById("chatTitle");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Get chatId & friend from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get("chatId");
+    const friend = urlParams.get("friend");
+    document.getElementById("chatTitle").textContent = `Chat with ${friend}`;
 
     let currentUser = null;
 
-    // Get chatId and friend from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const chatId = urlParams.get("chatId");
-    const friendEmail = urlParams.get("friend");
-
-    chatTitle.textContent = `Chat with ${friendEmail}`;
-
-    // Check login
     onAuthStateChanged(auth, user => {
       if (!user) {
         window.location.href = "index.html";
@@ -60,60 +55,66 @@
       }
     });
 
-    // Load messages
     function loadMessages() {
       const q = query(
         collection(db, "messages"),
         where("chatId", "==", chatId),
-        orderBy("timestamp")
+        orderBy("timestamp", "asc")
       );
 
       onSnapshot(q, snapshot => {
         chatBox.innerHTML = "";
         snapshot.forEach(doc => {
           const msg = doc.data();
-          const msgDiv = document.createElement("div");
-          msgDiv.style.margin = "5px 0";
-          msgDiv.style.padding = "5px 8px";
-          msgDiv.style.borderRadius = "4px";
-          msgDiv.style.maxWidth = "70%";
-          msgDiv.style.wordWrap = "break-word";
 
-          if (msg.sender === currentUser.email) {
-            msgDiv.style.backgroundColor = "#4CAF50";
-            msgDiv.style.color = "#fff";
-            msgDiv.style.marginLeft = "auto";
-          } else {
-            msgDiv.style.backgroundColor = "#222";
-            msgDiv.style.color = "#0f0";
-            msgDiv.style.marginRight = "auto";
-          }
+          const chatItem = document.createElement("div");
+          chatItem.classList.add("chat-item");
 
-          msgDiv.textContent = msg.text;
-          chatBox.appendChild(msgDiv);
+          const avatar = document.createElement("img");
+          avatar.classList.add("chat-avatar");
+          avatar.src = "avatar.png";
+
+          const chatInfo = document.createElement("div");
+          chatInfo.classList.add("chat-info");
+
+          const chatName = document.createElement("div");
+          chatName.classList.add("chat-name");
+          chatName.textContent = msg.user;
+
+          const chatLast = document.createElement("div");
+          chatLast.classList.add("chat-last");
+          chatLast.textContent = msg.text;
+
+          const chatTime = document.createElement("div");
+          chatTime.classList.add("chat-time");
+          chatTime.textContent = msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || "";
+
+          chatInfo.appendChild(chatName);
+          chatInfo.appendChild(chatLast);
+          chatItem.appendChild(avatar);
+          chatItem.appendChild(chatInfo);
+          chatItem.appendChild(chatTime);
+
+          chatBox.appendChild(chatItem);
         });
+
         chatBox.scrollTop = chatBox.scrollHeight;
       });
     }
 
-    // Send message
     sendBtn.addEventListener("click", async () => {
-      const text = messageInput.value.trim();
-      if (!text) return;
-
+      if (messageInput.value.trim() === "") return;
       await addDoc(collection(db, "messages"), {
         chatId: chatId,
-        sender: currentUser.email,
-        text: text,
+        user: currentUser.email,
+        text: messageInput.value,
         timestamp: serverTimestamp()
       });
-
       messageInput.value = "";
     });
 
-    // Back to chat list
-    backBtn.addEventListener("click", () => {
-      window.location.href = "chatlist.html";
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth);
     });
   </script>
 </body>
