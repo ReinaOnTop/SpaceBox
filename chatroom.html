@@ -3,29 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat Room (Debug)</title>
+  <title>SpaceBox - Chat Room</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    #debugLog {
-      background: black;
-      color: lime;
-      padding: 5px;
-      font-size: 12px;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-  </style>
 </head>
 <body>
-  <button id="backBtn">⬅ Back</button>
+  <button id="backBtn">Back</button>
   <h1 id="chatTitle">Chat</h1>
   <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
   
   <input type="text" id="messageInput" placeholder="Type a message">
   <button id="sendBtn">Send</button>
   <button id="logoutBtn">Logout</button>
-
-  <div id="debugLog"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -50,20 +38,10 @@
     const sendBtn = document.getElementById("sendBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const backBtn = document.getElementById("backBtn");
-    const debugLog = document.getElementById("debugLog");
 
-    function logDebug(msg) {
-      debugLog.innerHTML += msg + "<br>";
-      debugLog.scrollTop = debugLog.scrollHeight;
-    }
-
-    // Get chatId & friend from URL
     const urlParams = new URLSearchParams(window.location.search);
-    const chatId = urlParams.get("chatId");
+    const chatIdFromURL = urlParams.get("chatId");
     const friend = urlParams.get("friend");
-
-    logDebug("URL chatId = " + chatId);
-    logDebug("Friend = " + friend);
 
     document.getElementById("chatTitle").textContent = `Chat with ${friend}`;
 
@@ -74,26 +52,23 @@
         window.location.href = "index.html";
       } else {
         currentUser = user;
-        logDebug("Logged in as " + currentUser.email);
         loadMessages();
       }
     });
 
     function loadMessages() {
-      logDebug("Querying messages for chatId = " + chatId);
+      const fixedChatId = [currentUser.email, friend].sort().join("_");
 
       const q = query(
         collection(db, "messages"),
-        where("chatId", "==", chatId),
+        where("chatId", "==", fixedChatId),
         orderBy("timestamp", "asc")
       );
 
       onSnapshot(q, snapshot => {
-        logDebug("Snapshot size = " + snapshot.size);
         chatBox.innerHTML = "";
         snapshot.forEach(docSnap => {
           const msg = docSnap.data();
-          logDebug("Message found: " + JSON.stringify(msg));
           const msgDiv = document.createElement("div");
           msgDiv.textContent = `${msg.user}: ${msg.text}`;
           chatBox.appendChild(msgDiv);
@@ -104,13 +79,16 @@
 
     sendBtn.addEventListener("click", async () => {
       if (messageInput.value.trim() === "") return;
-      logDebug("Sending message with chatId = " + chatId);
+
+      const fixedChatId = [currentUser.email, friend].sort().join("_");
+
       await addDoc(collection(db, "messages"), {
-        chatId: chatId,
+        chatId: fixedChatId,
         user: currentUser.email,
         text: messageInput.value,
         timestamp: serverTimestamp()
       });
+
       messageInput.value = "";
     });
 
