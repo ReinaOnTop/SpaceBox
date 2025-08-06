@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat Room</title>
+  <title>SpaceBox - Chat Room (Debug)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button id="backBtn">Back</button>
+  <button id="backBtn">⬅ Back</button>
   <h1 id="chatTitle">Chat</h1>
+
+  <!-- Debug Display -->
+  <div id="debugOutput" style="background:#222;color:#0f0;padding:5px;font-family:monospace;"></div>
+
   <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
   
   <input type="text" id="messageInput" placeholder="Type a message">
@@ -38,6 +42,7 @@
     const sendBtn = document.getElementById("sendBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const backBtn = document.getElementById("backBtn");
+    const debugOutput = document.getElementById("debugOutput");
 
     const urlParams = new URLSearchParams(window.location.search);
     const chatIdFromURL = urlParams.get("chatId");
@@ -52,13 +57,20 @@
         window.location.href = "index.html";
       } else {
         currentUser = user;
-        loadMessages();
+        const fixedChatId = [currentUser.email, friend].sort().join("_");
+
+        debugOutput.innerHTML = `
+          ChatId from URL: ${chatIdFromURL}<br>
+          ChatId after sort(): ${fixedChatId}<br>
+          Logged in as: ${currentUser.email}<br>
+          Friend: ${friend}
+        `;
+
+        loadMessages(fixedChatId);
       }
     });
 
-    function loadMessages() {
-      const fixedChatId = [currentUser.email, friend].sort().join("_");
-
+    function loadMessages(fixedChatId) {
       const q = query(
         collection(db, "messages"),
         where("chatId", "==", fixedChatId),
