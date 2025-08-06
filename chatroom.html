@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpaceBox - Chat Room</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 id="chatTitle">Chat</h1>
+
+  <div id="chatBox" style="height:300px; overflow-y:auto; border:1px solid #00ff66; padding:10px;"></div>
+
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button id="sendBtn">Send</button>
+    <button id="backBtn">Back</button>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } 
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const backBtn = document.getElementById("backBtn");
+    const chatTitle = document.getElementById("chatTitle");
+
+    // Read chatId & friend name from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get("chatId");
+    const friendName = urlParams.get("friend");
+    if (friendName) chatTitle.textContent = `Chat with ${friendName}`;
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        currentUser = user;
+        loadMessages();
+      }
+    });
+
+    function loadMessages() {
+      const msgRef = collection(db, "messages", chatId, "chat");
+      const q = query(msgRef, orderBy("timestamp"));
+
+      onSnapshot(q, snapshot => {
+        chatBox.innerHTML = "";
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+
+          const msgDiv = document.createElement("div");
+          msgDiv.classList.add("message-bubble");
+          if (msg.sender === currentUser.uid) {
+            msgDiv.classList.add("my-message");
+          } else {
+            msgDiv.classList.add("friend-message");
+          }
+
+          msgDiv.textContent = `${msg.text}  (${msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || ""})`;
+          chatBox.appendChild(msgDiv);
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+
+    sendBtn.addEventListener("click", async () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      await addDoc(collection(db, "messages", chatId, "chat"), {
+        sender: currentUser.uid,
+        text: text,
+        timestamp: serverTimestamp()
+      });
+
+      messageInput.value = "";
+    });
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "chatlist.html";
+    });
+  </script>
+</body>
+</html>
