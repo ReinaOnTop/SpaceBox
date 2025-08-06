@@ -62,3 +62,23 @@ h1 {
   font-size: 8px;
   color: #00ff66;
 }
+
+input, button {
+  background-color: black;
+  color: #00ff66;
+  border: 1px solid #00ff66;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+input::placeholder {
+  color: #00ff66;
+  opacity: 0.6;
+}
+
+button:hover {
+  background-color: #00ff66;
+  color: black;
+  cursor: pointer;
+}
