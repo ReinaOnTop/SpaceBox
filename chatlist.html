@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpaceBox - Chat List</title>
+  <title>SpaceBox - Chat List (Debug)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>SpaceBox Chats</h1>
+
+  <!-- Debug Display -->
+  <div id="debugOutput" style="background:#222;color:#0f0;padding:5px;font-family:monospace;"></div>
 
   <!-- Add Friend UI -->
   <div class="add-friend">
@@ -40,6 +43,7 @@
     const db = getFirestore(app);
 
     const chatList = document.getElementById("chatList");
+    const debugOutput = document.getElementById("debugOutput");
     const addFriendBtn = document.getElementById("addFriendBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
@@ -87,6 +91,8 @@
         snapshot.forEach(doc => {
           const data = doc.data();
           const chatId = [currentUser.email, data.friend].sort().join("_");
+
+          debugOutput.innerHTML += `Generated ChatId for ${data.friend}: ${chatId}<br>`;
 
           const chatItem = document.createElement("div");
           chatItem.classList.add("chat-item");
