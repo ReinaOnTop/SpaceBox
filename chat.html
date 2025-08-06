@@ -8,11 +8,14 @@
 </head>
 <body>
   <h1>SpaceBox Chat</h1>
-  <div id="chatBox" style="height:300px; overflow-y:scroll; border:1px solid #ccc; padding:10px;"></div>
   
-  <input type="text" id="messageInput" placeholder="Type a message">
-  <button id="sendBtn">Send</button>
-  <button id="logoutBtn">Logout</button>
+  <div id="chatBox" class="chat-list"></div>
+  
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button id="sendBtn">Send</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -49,44 +52,45 @@
       }
     });
 
-    async function loadMessages() {
+    function loadMessages() {
       const q = query(collection(db, "messages"), orderBy("timestamp"));
       onSnapshot(q, snapshot => {
         chatBox.innerHTML = "";
         snapshot.forEach(doc => {
-  const msg = doc.data();
+          const msg = doc.data();
 
-  const chatItem = document.createElement("div");
-  chatItem.classList.add("chat-item");
+          const chatItem = document.createElement("div");
+          chatItem.classList.add("chat-item");
 
-  const avatar = document.createElement("img");
-avatar.classList.add("chat-avatar");
-avatar.src = "avatar.png"; 
+          const avatar = document.createElement("img");
+          avatar.classList.add("chat-avatar");
+          avatar.src = "avatar.png"; // default avatar
 
-  const chatInfo = document.createElement("div");
-  chatInfo.classList.add("chat-info");
+          const chatInfo = document.createElement("div");
+          chatInfo.classList.add("chat-info");
 
-  const chatName = document.createElement("div");
-  chatName.classList.add("chat-name");
-  chatName.textContent = msg.user;
+          const chatName = document.createElement("div");
+          chatName.classList.add("chat-name");
+          chatName.textContent = msg.user;
 
-  const chatLast = document.createElement("div");
-  chatLast.classList.add("chat-last");
-  chatLast.textContent = msg.text;
+          const chatLast = document.createElement("div");
+          chatLast.classList.add("chat-last");
+          chatLast.textContent = msg.text;
 
-  const chatTime = document.createElement("div");
-  chatTime.classList.add("chat-time");
-  chatTime.textContent = msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || "";
+          const chatTime = document.createElement("div");
+          chatTime.classList.add("chat-time");
+          chatTime.textContent = msg.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || "";
 
-  chatInfo.appendChild(chatName);
-  chatInfo.appendChild(chatLast);
-  chatItem.appendChild(avatar);
-  chatItem.appendChild(chatInfo);
-  chatItem.appendChild(chatTime);
+          chatInfo.appendChild(chatName);
+          chatInfo.appendChild(chatLast);
+          chatItem.appendChild(avatar);
+          chatItem.appendChild(chatInfo);
+          chatItem.appendChild(chatTime);
 
-  chatBox.appendChild(chatItem);
-    });
- }
+          chatBox.appendChild(chatItem);
+        });
+      });
+    }
 
     sendBtn.addEventListener("click", async () => {
       if (messageInput.value.trim() === "") return;
